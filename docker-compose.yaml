@@ -1,0 +1,35 @@
+version: "3.8"
+
+services:
+  freeradius:
+    image: freeradius:pgsql
+    build:
+      context: images
+      dockerfile: freeradius/Dockerfile
+    ports:
+      - "1812:1812/udp"
+      - "1813:1813/udp"
+    environment:
+      - DB_NAME=radius
+      - DB_HOST=postgres
+      - DB_USER=radius
+      - DB_PASS=radpass
+      - DB_PORT=5432
+    volumes:
+      - ./radius/conf/users:/etc/raddb/users
+      - ./radius/conf/clients.conf:/etc/raddb/clients.conf
+      - ./radius/data:/var/lib/raduisd
+    depends_on:
+      - postgres  
+
+  postgres:
+    image: postgres:alpine
+    environment:
+      - POSTGRES_DB=radius
+      - POSTGRES_USER=radius
+      - POSTGRES_PASSWORD=radpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./postgresql/sql:/docker-entrypoint-initdb.d
+      - ./postgresql/data:/var/lib/postgresql/data
