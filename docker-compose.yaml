@@ -16,8 +16,6 @@ services:
       - DB_PASS=radpass
       - DB_PORT=5432
     volumes:
-      - ./radius/conf/users:/etc/raddb/users
-      - ./radius/conf/clients.conf:/etc/raddb/clients.conf
       - ./radius/data:/var/lib/raduisd
     depends_on:
       - postgres  

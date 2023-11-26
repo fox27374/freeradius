@@ -6,7 +6,7 @@ ARG GROUP=radius
 ARG GROUPID=2100
 ARG HOME=/home/$USER
 ENV PATH="$PATH:/usr/local/bin"
-ENV DEBUG=false
+ENV DEBUG=true
 ENV RADIUSD_OPTS=
 
 # Create user and group
