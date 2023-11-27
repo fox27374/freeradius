@@ -20,7 +20,7 @@ services:
     networks:
       - radius
     depends_on:
-      - postgres  
+      - process-psql  
 
   postgres:
     image: ${DB_IMAGE}
@@ -31,10 +31,32 @@ services:
     ports:
       - "${DB_PORT}:${DB_PORT}"
     volumes:
-      - ./postgresql/sql:/docker-entrypoint-initdb.d
+      - ./postgresql/sql:/docker-entrypoint-initdb.d:ro
       - ./postgresql/data:/var/lib/postgresql/data
     networks:
       - radius
 
+  process-psql:
+    image: ${PROCESS_IMAGE}
+    build:
+      context: images
+      dockerfile: process-psql/Dockerfile
+    environment:
+      - DB_HOST=postgres
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASS=${DB_PASS}
+      - DB_PORT=${DB_PORT}
+      - CLIENTS_FILE=${CLIENTS_FILE}
+      - USERS_FILE=${USERS_FILE}
+      - GROUPS_FILE=${GROUPS_FILE}
+    volumes:
+      - ./clients.csv:/home/processpsql/clients.csv:ro
+      - ./users.csv:/home/processpsql/users.csv:ro
+      - ./groups.csv:/home/processpsql/groups.csv:ro
+    networks:
+      - radius
+    depends_on:
+      - postgres  
 networks:
   radius:

@@ -1,8 +1,8 @@
 FROM python:3.9-alpine
 
-ARG USER=process-psql
+ARG USER=processpsql
 ARG USERID=1100
-ARG GROUP=process-psql
+ARG GROUP=processpsql
 ARG GROUPID=2100
 ARG HOME=/home/$USER
 
@@ -20,12 +20,12 @@ libc-dev \
 && rm -rf /tmp/* /var/cache/apk/*
 
 WORKDIR $HOME
-
 COPY --chown=root:$GROUP process-psql/requirements.txt .
-COPY --chown=root:$GROUP process-psql/process-psql.py .
-RUN \
-chmod u+x process-psql.py \
-&& pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
+COPY --chown=root:$GROUP process-psql/process-psql.py .
+RUN chmod g+x process-psql.py
+
+USER $USER
 #ENTRYPOINT ["entrypoint.sh"] 
-CMD ["sleep 3000"]
+CMD ["python", "process-psql.py"]

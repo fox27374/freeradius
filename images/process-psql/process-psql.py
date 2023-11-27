@@ -10,18 +10,12 @@ from psycopg2 import connect as db_connect, DatabaseError
 
 #print(data)
 
-# conn = psycopg2.connect(
-#     host=env['DB_HOST'],
-#     database=env['DB_NAME'],
-#     user=env['DB_USER'],
-#     password=env['DB_PASS'])
-
 params = {
-    "host": '10.140.60.252',
-    "port": '5432',
-    "database": 'radius',
-    "user": 'radius',
-    "password": 'radpass'
+        "host": env['DB_HOST'],
+        "port": env['DB_PORT'],
+        "database": env['DB_NAME'],
+        "user": env['DB_USER'],
+        "password": env['DB_PASS']
 }
 
 def get_csv_values(csv_file):
@@ -36,9 +30,9 @@ class PG:
         self.db_params = params
 
         # Load nas clients and user mappings
-        self.nas_clients = get_csv_values('clients.csv')
-        self.rad_users = get_csv_values('users.csv')
-        self.rad_groups = get_csv_values('groups.csv')
+        self.nas_clients = get_csv_values(env['CLIENTS_FILE'])
+        self.rad_users = get_csv_values(env['USERS_FILE'])
+        self.rad_groups = get_csv_values(env['GROUPS_FILE'])
         
         # Connect to PostgreSQL server and create the conn and cur objects
         self.connect()
