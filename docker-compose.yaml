@@ -10,13 +10,15 @@ services:
       - "1812:1812/udp"
       - "1813:1813/udp"
     environment:
-      - DB_NAME=${DB_NAME}
       - DB_HOST=postgres
+      - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - DB_PORT=5${DB_PORT}
     volumes:
       - ./radius/data:/var/lib/raduisd
+    networks:
+      - radius
     depends_on:
       - postgres  
 
@@ -31,3 +33,8 @@ services:
     volumes:
       - ./postgresql/sql:/docker-entrypoint-initdb.d
       - ./postgresql/data:/var/lib/postgresql/data
+    networks:
+      - radius
+
+networks:
+  radius:
