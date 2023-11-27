@@ -1,5 +1,5 @@
 venv
 venv/*
 .env
-/postgres/data
-/radius/data
+/postgres/data/*
+/radius/data/*
