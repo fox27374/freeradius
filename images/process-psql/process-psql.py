@@ -3,20 +3,7 @@
 
 from csv import DictReader as csv_read
 from os import environ as env
-from psycopg2 import connect as db_connect, DatabaseError
-
-
-#map_file=env['USER_VLAN_MAP']
-
-#print(data)
-
-params = {
-        "host": env['DB_HOST'],
-        "port": env['DB_PORT'],
-        "database": env['DB_NAME'],
-        "user": env['DB_USER'],
-        "password": env['DB_PASS']
-}
+from requests import post
 
 def get_csv_values(csv_file):
     with open(csv_file, 'r', newline='') as csv:
@@ -27,88 +14,84 @@ def get_csv_values(csv_file):
 class PG:
     def __init__(self):
         # Load DB parameters
-        self.db_params = params
+        self.url = f"http://{env['DB_HOST']}:{env['PGRST_PORT']}/"
 
         # Load nas clients and user mappings
         self.nas_clients = get_csv_values(env['CLIENTS_FILE'])
         self.rad_users = get_csv_values(env['USERS_FILE'])
         self.rad_groups = get_csv_values(env['GROUPS_FILE'])
-        
-        # Connect to PostgreSQL server and create the conn and cur objects
-        self.connect()
 
-    def connect(self):
-        """ Connect to the PostgreSQL database server """
-        try:
-            self.conn = db_connect(**self.db_params)
-            self.cur = self.conn.cursor()
-            
-        except (Exception, DatabaseError) as error:
-            print(error)
-
-    def execute(self, query):
-        """ Execute SQL query and commit the connection """
-        try:
-            self.cur.execute(query)
-        except (Exception, DatabaseError) as error:
-            print(error)
-        self.conn.commit()
-
-    def delete(self, db):
-        """ Delete database contents and reset id field """
-        try:
-            for item in db:
-                query = f"DELETE FROM {item}"
-                self.cur.execute(query)
-
-            for item in db:
-                query = f"ALTER SEQUENCE {item}_id_seq RESTART WITH 1"
-                self.cur.execute(query)
-        except (Exception, DatabaseError) as error:
-            print(error)
-        self.conn.commit()
-
-    def disconnect(self):
-        """ Disconnect from the PostgreSQL database server """
-        try:
-        # close the communication with the PostgreSQL
-            self.cur.close()
-        except (Exception, DatabaseError) as error:
-            print(error)
-        finally:
-            if self.conn is not None:
-                self.conn.close()
-                print('Database connection closed.')
+    def post(self, table, json):
+        headers = {'Content-type': 'application/json'}
+        url = f"{self.url}{table}"
+        print(url)
+        r = post(url, headers=headers, json=json)
 
     def nas_table(self):
-        """ Recreate the nas table to define radius clients"""
-        # Delete all entries
-        db_name = ["nas"]
-        self.delete(db_name)
+        """ Insert data to nas table """
+        db = 'nas'
         
         for client in self.nas_clients:
-            self.execute(f"insert into {db_name[0]} (nasname, shortname, secret) values ('{client['ip']}', '{client['name']}', '{client['secret']}')")
+            data = {
+                "nasname": client['ip'],
+                "shortname": client['name'],
+                "secret": client['secret']
+            }
+            self.post(db, data)
 
     def user_group_table(self):
-        """ Recreate the radcheck and radusergroup table"""
-        # Delete all entries
-        db_name = ["radcheck", "radusergroup"]
-        self.delete(db_name)
+        """ Insert data radcheck and radusergroup table """
+        db = ["radcheck", "radusergroup"]
         
         for user in self.rad_users:
-            self.execute(f"insert into {db_name[0]} (username, attribute, op, value) values ('{user['mac']}', 'Cleartext-Password', '=:', '{user['mac']}')")
-            self.execute(f"insert into {db_name[1]} (username, groupname, priority) values ('{user['mac']}', '{user['group']}', '0')")
+            data = {
+                "username": user['mac'],
+                "attribute": "Cleartext-Password",
+                "op": "=:",
+                "value": user['mac']
+            }
+
+            self.post(db[0], data)
+
+            data = {
+                "username": user['mac'],
+                "groupname": user['group'],
+                "priority": "0"
+            }
+
+            self.post(db[1], data)
 
     def reply_table(self):
-        """ Recreate the radcheck and radusergroup table"""
-        # Delete all entries
-        db_name = ["radgroupreply"]
-        self.delete(db_name)
+        """ Insert data into radgroupreply table"""
+        db = "radgroupreply"
         
         for group in self.rad_groups:
-            self.execute(f"insert into {db_name[0]} (groupname, attribute, op, value) values ('{group['group']}', 'Tunnel-Type', '=', 'vlan')")
-            self.execute(f"insert into {db_name[0]} (groupname, attribute, op, value) values ('{group['group']}', 'Tunnel-Medium-Type', '=', '802')")
-            self.execute(f"insert into {db_name[0]} (groupname, attribute, op, value) values ('{group['group']}', 'Tunnel-Private-Group-ID', '=', '{group['vlan']}')")
+            data = {
+                "groupname": group['group'],
+                "attribute": "Tunnel-Type",
+                "op": "=",
+                "value": "vlan"
+            }
+
+            self.post(db, data)
+
+            data = {
+                "groupname": group['group'],
+                "attribute": "Tunnel-Medium-Type",
+                "op": "=",
+                "value": "802"
+            }
+
+            self.post(db, data)
+
+            data = {
+                "groupname": group['group'],
+                "attribute": "Tunnel-Private-Group-ID",
+                "op": "=",
+                "value": group['vlan']
+            }
+
+            self.post(db, data)
 
 
 if __name__ == '__main__':
@@ -116,4 +99,4 @@ if __name__ == '__main__':
     pg.nas_table()
     pg.user_group_table()
     pg.reply_table()
-    pg.disconnect()
+

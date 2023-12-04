@@ -1,4 +1,4 @@
-version: "3.8"
+version: "3"
 
 services:
   freeradius:
@@ -15,15 +15,15 @@ services:
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
       - DB_PORT=5${DB_PORT}
-    volumes:
-      - ./radius/data:/var/lib/raduisd
+    #volumes:
+    #  - ./radius/data:/var/lib/raduisd
     networks:
       - radius
     depends_on:
       - postgres
 
   postgres:
-    image: ${DB_IMAGE}
+    image: ${POSTGRESSQL_IMAGE}
     environment:
       - POSTGRES_DB=${DB_NAME}
       - POSTGRES_USER=${DB_USER}
@@ -32,7 +32,7 @@ services:
       - "${DB_PORT}:${DB_PORT}"
     volumes:
       - ./postgresql/sql:/docker-entrypoint-initdb.d:ro
-      - ./postgresql/data:/var/lib/postgresql/data
+      #- postgresql:/var/lib/postgresql/data
     networks:
       - radius
 
@@ -42,35 +42,35 @@ services:
     ports:
       - "${PGRST_PORT}:${PGRST_PORT}"
     environment:
-      PGRST_DB_URI: postgres://${DB_USER}:${DB_PASS}@postgres:${DB_PORT}/${DB_NAME}
+      PGRST_DB_URI: postgres://authenticator:authenticator@postgres:${DB_PORT}/${DB_NAME}
+      #PGRST_DB_URI: postgres://${DB_USER}:${DB_PASS}@postgres:${DB_PORT}/${DB_NAME}
       PGRST_OPENAPI_SERVER_PROXY_URI: http://127.0.0.1:${PGRST_PORT}
-      PGRST_DB_ANON_ROLE: web_anon
+      PGRST_DB_ANON_ROLE: anon
     networks:
       - radius
     depends_on:
       - postgres
 
-  # process-psql:
-  #   image: ${PROCESS_IMAGE}
-  #   build:
-  #     context: images
-  #     dockerfile: process-psql/Dockerfile
-  #   environment:
-  #     - DB_HOST=postgres
-  #     - DB_NAME=${DB_NAME}
-  #     - DB_USER=${DB_USER}
-  #     - DB_PASS=${DB_PASS}
-  #     - DB_PORT=${DB_PORT}
-  #     - CLIENTS_FILE=${CLIENTS_FILE}
-  #     - USERS_FILE=${USERS_FILE}
-  #     - GROUPS_FILE=${GROUPS_FILE}
-  #   volumes:
-  #     - ./clients.csv:/home/processpsql/clients.csv:ro
-  #     - ./users.csv:/home/processpsql/users.csv:ro
-  #     - ./groups.csv:/home/processpsql/groups.csv:ro
-  #   networks:
-  #     - radius
-  #   depends_on:
-  #     - postgres  
+  process-psql:
+    image: ${PROCESS_IMAGE}
+    build:
+      context: images
+      dockerfile: process-psql/Dockerfile
+    environment:
+      - DB_HOST=postgrest
+      - PGRST_PORT=${PGRST_PORT}
+      - CLIENTS_FILE=${CLIENTS_FILE}
+      - USERS_FILE=${USERS_FILE}
+      - GROUPS_FILE=${GROUPS_FILE}
+    volumes:
+      - ./clients.csv:/home/processpsql/clients.csv:ro
+      - ./users.csv:/home/processpsql/users.csv:ro
+      - ./groups.csv:/home/processpsql/groups.csv:ro
+    networks:
+      - radius
+    depends_on:
+      - postgres 
+
 networks:
-  radius:
+  radius: 
+

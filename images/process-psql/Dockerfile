@@ -12,12 +12,12 @@ addgroup -g $GROUPID $GROUP \
 && adduser --uid $USERID -G $GROUP -h $HOME -D $USER
 
 # Install additional software
-RUN \ 
-apk add -q --no-cache \
-libpq-dev \
-gcc \
-libc-dev \
-&& rm -rf /tmp/* /var/cache/apk/*
+#RUN \ 
+#apk add -q --no-cache \
+#libpq-dev \
+#gcc \
+#libc-dev \
+#&& rm -rf /tmp/* /var/cache/apk/*
 
 WORKDIR $HOME
 COPY --chown=root:$GROUP process-psql/requirements.txt .
