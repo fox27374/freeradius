@@ -1,9 +1,9 @@
 #!/usr/bin/env python
-# #!/usr/local/bin/python
 
 from csv import DictReader as csv_read
 from os import environ as env
-from requests import post
+from requests import get, post, RequestException
+from time import sleep
 
 def get_csv_values(csv_file):
     with open(csv_file, 'r', newline='') as csv:
@@ -20,6 +20,20 @@ class PG:
         self.nas_clients = get_csv_values(env['CLIENTS_FILE'])
         self.rad_users = get_csv_values(env['USERS_FILE'])
         self.rad_groups = get_csv_values(env['GROUPS_FILE'])
+
+    def check(self):
+        table = 'nas'
+        url = f"{self.url}{table}"
+        while True:
+            print('Waiting for DB to become ready')
+            try:
+                r = get(url)
+                r.raise_for_status()
+                print("DB ready, moving on")
+                return
+            except RequestException as e:
+                print(f"DB not ready yet, retrying")
+            sleep(2)
 
     def post(self, table, json):
         headers = {'Content-type': 'application/json'}
@@ -96,6 +110,7 @@ class PG:
 
 if __name__ == '__main__':
     pg = PG()
+    pg.check()
     pg.nas_table()
     pg.user_group_table()
     pg.reply_table()

@@ -14,7 +14,7 @@ services:
       - DB_NAME=${DB_NAME}
       - DB_USER=${DB_USER}
       - DB_PASS=${DB_PASS}
-      - DB_PORT=5${DB_PORT}
+      - DB_PORT=${DB_PORT}
     #volumes:
     #  - ./radius/data:/var/lib/raduisd
     networks:
@@ -58,6 +58,7 @@ services:
       dockerfile: process-psql/Dockerfile
     environment:
       - DB_HOST=postgrest
+      - DB_PORT=${DB_PORT}
       - PGRST_PORT=${PGRST_PORT}
       - CLIENTS_FILE=${CLIENTS_FILE}
       - USERS_FILE=${USERS_FILE}
