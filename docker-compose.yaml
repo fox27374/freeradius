@@ -17,8 +17,8 @@ services:
       - DB_PORT=5${DB_PORT}
     #volumes:
     #  - ./radius/data:/var/lib/raduisd
-    networks:
-      - radius
+    #    networks:
+    #  - radius
     depends_on:
       - postgres
 
@@ -33,8 +33,8 @@ services:
     volumes:
       - ./postgresql/sql:/docker-entrypoint-initdb.d:ro
       #- postgresql:/var/lib/postgresql/data
-    networks:
-      - radius
+      #networks:
+      #- radius
 
 
   postgrest:
@@ -46,8 +46,8 @@ services:
       #PGRST_DB_URI: postgres://${DB_USER}:${DB_PASS}@postgres:${DB_PORT}/${DB_NAME}
       PGRST_OPENAPI_SERVER_PROXY_URI: http://127.0.0.1:${PGRST_PORT}
       PGRST_DB_ANON_ROLE: anon
-    networks:
-      - radius
+        #networks:
+        #- radius
     depends_on:
       - postgres
 
@@ -66,8 +66,8 @@ services:
       - ./clients.csv:/home/processpsql/clients.csv:ro
       - ./users.csv:/home/processpsql/users.csv:ro
       - ./groups.csv:/home/processpsql/groups.csv:ro
-    networks:
-      - radius
+        #networks:
+        #- radius
     depends_on:
       - postgres 
 
